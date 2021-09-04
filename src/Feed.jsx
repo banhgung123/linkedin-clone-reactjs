@@ -14,7 +14,10 @@ import {
   addDoc,
   serverTimestamp,
   query,
-  orderBy
+  orderBy,
+  getAuth,
+  doc,
+  onSnapshot
 } from "./firebase";
 import { useSelector } from "react-redux";
 import { selectUser } from "./features/userSlice";
@@ -27,18 +30,38 @@ function Feed() {
 
   useEffect(() => {
     getData();
-  }, [posts]);
+  }, []);
 
   const getData = async () => {
-    const postsRef = collection(db, "posts");
-    const q = query(postsRef, orderBy("timestamp", "desc"));
-    const querySnapshot = await getDocs(q);
-    setPosts(
-      querySnapshot.docs.map((doc) => ({
-        id: doc.id,
-        data: doc.data()
-      }))
-    );
+    // const postsRef = collection(db, "posts");
+
+    const q = query(collection(db, "posts"), orderBy("timestamp", "desc"));
+    onSnapshot(q, (querySnapshot) => {
+      const getPosts = [];
+      querySnapshot.forEach((doc) => {
+        getPosts.push({ id: doc.id, data: doc.data() });
+      });
+      setPosts(
+        getPosts.map((item) => {
+          if (item.data.description === getAuth().currentUser.email) {
+            return item;
+          }
+        })
+      );
+    });
+
+    // const q = query(
+    //   postsRef,
+    //   orderBy("timestamp", "desc"),
+    //   where("description", "==", getAuth().currentUser.email)
+    // );
+    // const querySnapshot = await getDocs(q);
+    // setPosts(
+    //   querySnapshot.docs.map((doc) => ({
+    //     id: doc.id,
+    //     data: doc.data()
+    //   }))
+    // );
   };
 
   const sendPost = (e) => {
@@ -84,15 +107,23 @@ function Feed() {
 
       {/* Posts */}
       <FlipMove>
-        {posts.map(({ id, data: { name, description, message, photoUrl } }) => (
-          <Post
-            key={id}
-            name={name}
-            description={description}
-            message={message}
-            photoUrl={photoUrl}
-          />
-        ))}
+        {posts.map((item) => {
+          if (item) {
+            const {
+              id,
+              data: { name, description, message, photoUrl }
+            } = item;
+            return (
+              <Post
+                key={id}
+                name={name}
+                description={description}
+                message={message}
+                photoUrl={photoUrl}
+              />
+            );
+          }
+        })}
       </FlipMove>
     </div>
   );

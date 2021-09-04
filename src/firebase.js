@@ -6,7 +6,9 @@ import {
   addDoc,
   serverTimestamp,
   query,
-  orderBy
+  orderBy,
+  doc,
+  onSnapshot
 } from "firebase/firestore";
 import {
   getAuth,
@@ -43,5 +45,7 @@ export {
   signInWithEmailAndPassword,
   updateProfile,
   onAuthStateChanged,
-  signOut
+  signOut,
+  doc,
+  onSnapshot
 };
